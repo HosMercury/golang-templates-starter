@@ -15,14 +15,14 @@ func Connect() *pgxpool.Pool {
 		os.Exit(1)
 	}
 
-	var greeting string
-	err = dbpool.QueryRow(context.Background(), "select 'Hello, world!'").Scan(&greeting)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "QueryRow failed: %v\n", err)
-		os.Exit(1)
-	}
+	// var greeting string
+	// err = dbpool.QueryRow(context.Background(), "select 'Hello, world!'").Scan(&greeting)
+	// if err != nil {
+	// 	fmt.Fprintf(os.Stderr, "QueryRow failed: %v\n", err)
+	// 	os.Exit(1)
+	// }
 
-	fmt.Println(greeting)
+	// fmt.Println(greeting)
 
 	return dbpool
 }

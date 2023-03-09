@@ -6,16 +6,17 @@ import (
 	"net/http"
 	"os"
 	"snip/db"
+	"text/template"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 type application struct {
-	errorLog *log.Logger
-	infoLog  *log.Logger
-	pool     *pgxpool.Pool
+	errorLog      *log.Logger
+	infoLog       *log.Logger
+	pool          *pgxpool.Pool
+	templateCache map[string]*template.Template
 }
 
 func main() {
@@ -27,10 +28,17 @@ func main() {
 
 	pool := db.Connect()
 
+	// Template cache
+	templateCache, err := newTemplateCache()
+	if err != nil {
+		log.Print(err)
+	}
+
 	app := &application{
-		errorLog: errorLog,
-		infoLog:  infoLog,
-		pool:     pool,
+		errorLog:      errorLog,
+		infoLog:       infoLog,
+		pool:          pool,
+		templateCache: templateCache,
 	}
 
 	r := app.routes()
@@ -40,6 +48,7 @@ func main() {
 		ErrorLog: errorLog,
 		Handler:  r,
 	}
+
 	infoLog.Printf("Starting server on %s", *addr)
 
 	defer pool.Close()

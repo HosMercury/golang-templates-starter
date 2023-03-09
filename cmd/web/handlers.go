@@ -6,8 +6,11 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"snip/internal/models"
+	"strconv"
 	"text/template"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -32,8 +35,57 @@ func (app *application) SnippetsIndex(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) SnippetsView(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-	w.Write([]byte(id))
+
+	id, _ := strconv.Atoi(chi.URLParam(r, "id"))
+
+	q := "SELECT * FROM snippets WHERE id = $1"
+
+	row := app.pool.QueryRow(r.Context(), q, id)
+
+	var s models.Snippet
+
+	err := row.Scan(&s.Id, &s.Title, &s.Content, &s.Created, &s.Expires, &s.Version)
+
+	if err != nil {
+		log.Print(err)
+	}
+
+	// files := []string{
+	// 	"./ui/html/base.tmpl",
+	// 	"./ui/html/partials/nav.tmpl",
+	// 	"./ui/html/pages/view.tmpl",
+	// }
+
+	// ts, err := template.ParseFiles(files...)
+	// if err != nil {
+	// 	log.Print(err)
+	// 	return
+	// }
+
+	// data := &templateData{
+	// 	Snippet: &s,
+	// }
+
+	// err = ts.ExecuteTemplate(w, "base", data)
+
+	// if err != nil {
+	// 	log.Print(err)
+	// 	return
+	// }
+
+	// log.Print(s.Title)
+
+	// w.Write([]byte(fmt.Sprintf("the id is %d", id)))
+
+	data := app.newTemplateData(r)
+	data.Snippet = &s
+
+	// fmt.Printf("%+v\n", data)
+	// fmt.Printf("%+v\n", data.Snippet)
+
+	spew.Dump(data)
+
+	app.render(w, http.StatusOK, "view.tmpl", data)
 }
 
 func (app *application) SnippetsCreate(w http.ResponseWriter, r *http.Request) {
@@ -67,7 +119,7 @@ func (app *application) SnippetsCreate(w http.ResponseWriter, r *http.Request) {
 	// fmt.Fprintf(w, "Snippet: %+v", s)
 }
 
-func (app *application) notFound(w http.ResponseWriter) {
+func (app *application) NotFound(w http.ResponseWriter) {
 	app.errorLog.Print("Not Found")
 }
 
